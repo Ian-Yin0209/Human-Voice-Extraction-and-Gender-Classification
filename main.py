@@ -5,7 +5,11 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # change the input audio file, which should be a \\\\\\\\\\.wav file with 2 channels.//////////
-input = './wav file/Sam Smith _ Normani - Dancing With A Stranger~1.wav'
+'''
+                 Here are some pre-set input wav file, you can change the name to 
+    'Dancing With A Stranger.wav'  'Love Story.wav' 'Someone Like You.wav' 'Thinking Out Loud.wav'      
+                                                                                                        '''
+input = './wav file/Dancing with stranger.wav'
 separate_output = './output'
 # check the human voice file and the BGM file in the directory above
 filename = estimate(input,separate_output)
