@@ -26,6 +26,7 @@ def up_block(in_filters, out_filters, dropout=False):
 
 
 class UNet(nn.Module):
+    """Original U-Net topology, preserving converted checkpoint parameter names."""
     def __init__(self, in_channels=2):
         super(UNet, self).__init__()
         self.down1_conv, self.down1_act = down_block(in_channels, 16)
@@ -66,15 +67,16 @@ class UNet(nn.Module):
         d6 = self.down6_act(d6_conv)
 
         u1 = self.up1(d6)
-        u2 = self.up2(torch.cat([d5_conv, u1], axis=1))
-        u3 = self.up3(torch.cat([d4_conv, u2], axis=1))
-        u4 = self.up4(torch.cat([d3_conv, u3], axis=1))
-        u5 = self.up5(torch.cat([d2_conv, u4], axis=1))
-        u6 = self.up6(torch.cat([d1_conv, u5], axis=1))
+        u2 = self.up2(torch.cat([d5_conv, u1], dim=1))
+        u3 = self.up3(torch.cat([d4_conv, u2], dim=1))
+        u4 = self.up4(torch.cat([d3_conv, u3], dim=1))
+        u5 = self.up5(torch.cat([d2_conv, u4], dim=1))
+        u6 = self.up6(torch.cat([d1_conv, u5], dim=1))
         u7 = self.up7(u6)
         return u7 * x
 
 
 if __name__ == '__main__':
-    net = UNet(14)
-    print(net(torch.rand(1, 14, 20, 48)).shape)
+    net = UNet(2).eval()
+    with torch.inference_mode():
+        print(net(torch.rand(1, 2, 64, 64)).shape)

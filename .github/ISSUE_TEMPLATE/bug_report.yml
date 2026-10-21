@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible problem with an audio utility or optional model command.
+title: "[Bug] "
+body:
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and error
+      description: Include the exact command and complete error. Remove private information if needed.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Explain what you expected and what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Python version, package version or commit, and dependency versions. For models, include CPU/CUDA and checkpoint source.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Small reproduction
+      description: Prefer generated audio or a redistributable fixture. Do not upload private speech, copyrighted music or weights. Include format, duration, sample rate and channel count.
+    validations:
+      required: false

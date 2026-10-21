@@ -112,3 +112,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Local editors, models and audio outputs
+.idea/
+models/
+checkpoints/
+output/
+*.wav
+*.h5
+*.hdf5

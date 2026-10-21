@@ -1,20 +1,39 @@
-import numpy as np
-import tensorflow as tf
+"""Convert the original TensorFlow variable layout to U-Net state dictionaries."""
 
-from .unet import UNet
+from pathlib import Path
+
+import numpy as np
 
 
 def tf2pytorch(checkpoint_path, num_instrumments):
+    """Read a TensorFlow checkpoint prefix, reporting incomplete assets clearly."""
+    prefix = Path(checkpoint_path)
+    if not Path(str(prefix) + ".index").is_file():
+        raise FileNotFoundError(
+            f"TensorFlow checkpoint index not found: {prefix}.index. "
+            "Pass the checkpoint prefix, for example checkpoints/2stems/model."
+        )
+    try:
+        import tensorflow as tf
+    except ImportError as exc:
+        raise ImportError(
+            "Reading TensorFlow checkpoints requires model dependencies. "
+            "Install them from the repository with: pip install '.[models]'"
+        ) from exc
+
     tf_vars = {}
-    init_vars = tf.train.list_variables(checkpoint_path)
-    # print(init_vars)
-    for name, shape in init_vars:
-        try:
-            # print('Loading TF Weight {} with shape {}'.format(name, shape))
-            data = tf.train.load_variable(checkpoint_path, name)
-            tf_vars[name] = data
-        except Exception as e:
-            print('Load error')
+    try:
+        for name, _ in tf.train.list_variables(str(prefix)):
+            tf_vars[name] = tf.train.load_variable(str(prefix), name)
+    except Exception as exc:
+        raise RuntimeError(f"Unable to read TensorFlow checkpoint {prefix}: {exc}") from exc
+    try:
+        return _convert_weights(tf_vars, num_instrumments)
+    except KeyError as exc:
+        raise ValueError(f"Checkpoint {prefix} is missing required variable {exc}.") from exc
+
+
+def _convert_weights(tf_vars, num_instrumments):
     conv_idx = 0
     tconv_idx = 0
     bn_idx = 0
