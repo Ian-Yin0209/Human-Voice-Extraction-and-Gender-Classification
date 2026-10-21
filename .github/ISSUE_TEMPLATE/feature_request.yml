@@ -1,0 +1,25 @@
+name: Feature request
+description: Propose a concrete improvement to local audio processing or model integration.
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the workflow and what currently prevents it.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Include an example command, expected output and alternatives if useful.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Dependencies, model sources or examples
+      description: Link relevant sources and licensing information. Do not attach weights or private audio.
+    validations:
+      required: false

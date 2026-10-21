@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voice-extraction-toolkit"
+version = "0.2.0"
+description = "File-based audio preparation, vocal separation, and legacy voice classification"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+authors = [{name = "Ian-Yin0209"}]
+dependencies = ["numpy>=1.26,<3", "scipy>=1.11,<2", "soundfile>=0.12,<1"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Topic :: Multimedia :: Sound/Audio :: Analysis",
+]
+
+[project.optional-dependencies]
+models = ["torch>=2.2,<3", "tensorflow>=2.16,<3", "librosa>=0.10.2,<1", "h5py>=3.10,<4"]
+dev = ["build>=1.2,<2", "ruff>=0.11,<1"]
+
+[project.scripts]
+voice-extract = "voice_extraction.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Ian-Yin0209/Human-Voice-Extraction-and-Gender-Classification"
+Issues = "https://github.com/Ian-Yin0209/Human-Voice-Extraction-and-Gender-Classification/issues"
+
+[tool.setuptools.packages.find]
+include = ["voice_extraction*", "spleeter_style*"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-exclude = ["legacy"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
