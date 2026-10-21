@@ -6,7 +6,7 @@ Environment: Windows 10, Python 3.12.14, CPU. The optional model runtime was ins
 
 | Check | Result |
 | --- | --- |
-| Unit and CLI regressions | 47 tests passed, zero skipped with PyTorch installed. |
+| Unit and CLI regressions | The original 47 tests passed with no skips when PyTorch was installed; the additional ASCII-console Unicode-path regression passed separately (48 tests in total). |
 | Static checks | `python -m ruff check .` passed. |
 | Distribution build | Source archive and pure-Python wheel built successfully. |
 | Installed-wheel entry point | `voice-extract --version`, `inspect --json`, and `prepare` ran outside the checkout. |
@@ -33,3 +33,5 @@ The output directory must not exist. This generates an original two-second 44.1 
 These are software compatibility and regression checks. A tone is not speech or music, and successful inference does not establish separation quality, classifier accuracy, calibration, demographic coverage, or real-world usefulness. There is no independent quality benchmark or external adoption claim.
 
 CI is configured for Python 3.10, 3.11 and 3.12 on Linux and Windows, with a separate CPU PyTorch job. The local record above verifies only the stated Windows/Python environment; remote CI outcomes must be checked separately.
+
+The first remote CI run passed Linux and CPU PyTorch checks but exposed a Windows ANSI-console failure: writing an unrepresentable filename to stdout turned otherwise successful audio processing into an error. The CLI now escapes only characters the selected stream encoding cannot represent, and the new regression explicitly uses an ASCII console. Check the PR's current CI run for the final matrix result.

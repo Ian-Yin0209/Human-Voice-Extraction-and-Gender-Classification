@@ -1,6 +1,7 @@
 """Public CLI behavior, including operation without optional model imports."""
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -127,6 +128,42 @@ class CLITests(unittest.TestCase):
         self.assertTrue(np.isfinite(audio).all())
         self.assertGreater(np.max(np.abs(audio)), 0.95)
         self.assertLessEqual(np.max(np.abs(audio)), 1.0001)
+
+    def test_unicode_paths_work_with_ascii_console_encoding(self):
+        environment = os.environ.copy()
+        environment["PYTHONIOENCODING"] = "ascii"
+
+        def run_ascii_cli(*arguments):
+            return subprocess.run(
+                [sys.executable, "-m", "voice_extraction",
+                 *[str(argument) for argument in arguments]],
+                cwd=PROJECT_ROOT,
+                env=environment,
+                capture_output=True,
+                text=True,
+                encoding="ascii",
+                timeout=45,
+            )
+
+        with self.subTest(operation="prepare"):
+            output = self.directory / "受限编码 输出.wav"
+            result = run_ascii_cli(
+                "prepare", self.input, output,
+                "--duration", "0.25", "--sample-rate", "16000",
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue(result.stdout.strip())
+            actual, sample_rate = sf.read(output, always_2d=True)
+            original, _ = sf.read(self.input, always_2d=True)
+            self.assertEqual(sample_rate, 16000)
+            self.assertEqual(actual.shape, (4000, 2))
+            np.testing.assert_allclose(actual, original[:4000], atol=1e-6)
+
+        with self.subTest(operation="missing input"):
+            output = self.directory / "不应生成 输出.wav"
+            result = run_ascii_cli("prepare", self.directory / "不存在 输入.wav", output)
+            self.assert_cli_error(result)
+            self.assertFalse(output.exists())
 
     def test_missing_input_reports_error_without_traceback(self):
         result = self.run_cli("inspect", self.directory / "不存在.wav", "--json")

@@ -9,6 +9,14 @@ import sys
 from . import __version__
 
 
+def _emit(text: str, stream) -> None:
+    """Keep diagnostics printable when a redirected Windows stream uses ANSI."""
+    encoding = getattr(stream, "encoding", None)
+    if encoding:
+        text = text.encode(encoding, errors="backslashreplace").decode(encoding)
+    print(text, file=stream)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Prepare audio and run optional local voice models.")
     parser.add_argument("--version", action="version", version=__version__)
@@ -64,13 +72,13 @@ def main(argv: list[str] | None = None) -> int:
                 args.input, weights=args.weights, start=args.start, duration=args.duration,
             )
         if getattr(args, "json", False):
-            print(json.dumps(result, ensure_ascii=True, allow_nan=False))
+            _emit(json.dumps(result, ensure_ascii=True, allow_nan=False), sys.stdout)
         else:
             for key, value in result.items():
-                print(f"{key}: {value}")
+                _emit(f"{key}: {value}", sys.stdout)
         return 0
     except (ValueError, OSError, RuntimeError, ImportError) as exc:
-        print(f"error: {exc}", file=sys.stderr)
+        _emit(f"error: {exc}", sys.stderr)
         return 2
 
 
