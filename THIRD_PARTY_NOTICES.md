@@ -2,6 +2,14 @@
 
 This project contains source derived from the projects below. Original copyrights and licenses remain in effect for those portions and must be preserved when distributing substantial copies. The new maintenance code and documentation are licensed as described in [LICENSE](LICENSE).
 
+## Sony MIMO-SCNet integration (0.3.0)
+
+Source: [SonyResearch/mimo-audio-separation](https://github.com/SonyResearch/mimo-audio-separation/tree/e172761a0798bef8a549d440a276218529b53edb), fixed revision `e172761a0798bef8a549d440a276218529b53edb`.
+
+`voice_extraction/_vendor/sony_scnet/scnet.py` and `separation.py` retain the upstream backbone with local helper imports. Their complete MIT notices ship in [Sony LICENSE](voice_extraction/_vendor/sony_scnet/LICENSE) (Copyright 2025 Yukara Ikemiya) and [inherited SCNet LICENSE](voice_extraction/_vendor/sony_scnet/LICENSE.SCNet). Changes are listed in [SOURCE.md](voice_extraction/_vendor/sony_scnet/SOURCE.md). The new inference-only adapter follows the upstream MIMO normalization and direct-prediction consistency projection; it does not redistribute the training pipeline.
+
+The checkpoint is an external user-obtained artifact, not part of this source distribution. No separate explicit weight license was found in the inspected release archive. A source-code MIT badge does not license external recordings, datasets or checkpoints; see [Research](docs/RESEARCH.md).
+
 ## 1. spleeter-pytorch — Tuan Nguyen
 
 Source: [tuan3w/spleeter-pytorch](https://github.com/tuan3w/spleeter-pytorch/tree/853d4bb6048fae879543342a8278c298854637f3).

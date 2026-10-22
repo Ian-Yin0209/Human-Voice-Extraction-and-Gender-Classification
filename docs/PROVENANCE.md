@@ -1,5 +1,9 @@
 # Project provenance
 
+## 2026 research integration
+
+Version 0.3 adds an inference adapter for Sony Research's MIMO-SCNet small configuration from [Iterative Audio Separation with Mixture Consistency via MIMO Model Extension](https://arxiv.org/abs/2609.07226). Source revision, modifications, notices, checkpoint hashes and limits are recorded in [Research](RESEARCH.md) and `voice_extraction/_vendor/sony_scnet/SOURCE.md`. This project did not train that model. External weights are obtained separately and are not included in the MIT source distribution.
+
 ## Educational origin
 
 This repository began as **Human Voice Extraction and Gender Classification**, an educational prototype described in its original README as coursework for **ESC7013P**. Its original source was published in April 2022. It combined a Spleeter-style separator with a voice-label classifier and local audio recording scripts.

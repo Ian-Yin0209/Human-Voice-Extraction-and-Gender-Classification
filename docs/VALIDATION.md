@@ -1,5 +1,25 @@
 # Validation
 
+## 0.3.0 MIMO integration: 2026-10-22
+
+The fixed Sony MIMO-SCNet small checkpoint passed real CPU inference on Windows/Python 3.12.14. Both the explicit network fetch command and local-ZIP install path completed with the pinned archive and extracted-weight SHA-256 values.
+
+The [machine-readable record](validation/2026-10-22-mimo-cpu.json) contains two generated-audio cases: a two-second 16 kHz stereo tone resampled to 88,200 stereo frames through five overlapping chunks, and a one-frame 8 kHz mono clip resampled to six stereo frames. Four stem WAVs and an accompaniment WAV were read back to check length, rate, channels and finite samples. Maximum mixture reconstruction error was below `1e-7` for both cases. This is a compatibility check, not an audio-quality benchmark. No GPU or reference-music dataset evaluation was performed.
+
+Reproduce without downloading models implicitly:
+
+```sh
+python -m pip install '.[modern]'
+voice-extract fetch-model mimo-scnet --models-dir models
+python examples/mimo_smoke.py --weights models/mimo-scnet-small-v1.pth --output-dir new-mimo-smoke
+```
+
+The fetch command is the explicit download step. The smoke script and separation command read only local files. The output directory must be new. `report.json` and `compatibility.json` describe the run and generated fixture.
+
+New automated checks cover download integrity and rollback, new-output-directory protection, chunk overlap/tail handling, output validation, optional-runtime boundaries and the numerical definition of SI-SDR. Most use small fixtures or an injected separator; they do not download or benchmark pretrained weights. The separately recorded real-checkpoint run above is distinguished from these tests. Windows tests that cannot create symbolic links are skipped locally; Linux CI exercises those paths.
+
+For research sources, model terms, chunking and metric limitations, see [Research](RESEARCH.md).
+
 ## Local checks: 2026-10-21
 
 Environment: Windows 10, Python 3.12.14, CPU. The optional model runtime was installed in an isolated environment outside the source tree.
