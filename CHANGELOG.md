@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 · 2026 MIMO Stem Lab (2026-10-22)
+
+- Integrate Sony's September 2026 MIMO-SCNet small checkpoint for local vocals, bass, drums and other stems, plus an instrumental sum.
+- Add explicit, checksum-pinned `fetch-model` and offline `models` commands. Separation reads local tensor-only weights without model downloads or configuration execution.
+- Add overlapping two-step inference, output length checks and a JSON run record with model hash, runtime and mixture reconstruction error.
+- Add zero-mean, per-channel reference SI-SDR with explicit undefined cases and no automatic alignment/resampling.
+- Preserve the lightweight base install and legacy commands; the modern extra needs PyTorch without the legacy TensorFlow stack.
+- Retain Sony/SCNet MIT source notices and document the external weight-license boundary and measurement scope.
+
 ## 0.2.0 (unreleased)
 
 - Add an installable package and file-based `inspect`, `prepare`, `separate`, and `classify` commands.

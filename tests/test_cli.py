@@ -86,11 +86,34 @@ class CLITests(unittest.TestCase):
             ("prepare", "--help"),
             ("separate", "--help"),
             ("classify", "--help"),
+            ("models", "--help"),
+            ("fetch-model", "--help"),
+            ("evaluate", "--help"),
         ]:
             with self.subTest(arguments=arguments):
                 result = self.run_cli(*arguments, block_models=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertIn("usage:", result.stdout.lower())
+
+    def test_model_catalog_is_offline_and_lightweight(self):
+        result = self.run_cli("models", "--json", block_models=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        model = json.loads(result.stdout)
+        self.assertEqual(model["id"], "mimo-scnet")
+        self.assertEqual(model["stems"], ["vocals", "bass", "drums", "other"])
+        self.assertFalse(model["weights_bundled"])
+
+    def test_evaluate_json_works_without_model_dependencies(self):
+        result = self.run_cli("evaluate", self.input, self.input, "--json", block_models=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        scores = json.loads(result.stdout)
+        self.assertIsNone(scores["si_sdr_db"])
+        self.assertEqual(scores["per_channel"][0]["reason"], "perfect_reconstruction")
+
+    def test_mimo_requires_explicit_weights_and_new_output_directory(self):
+        result = self.run_cli("separate", self.input, self.directory / "stems", "--backend", "mimo")
+        self.assert_cli_error(result)
+        self.assertIn("--weights", result.stderr)
 
     def test_inspect_json_works_without_model_dependencies(self):
         result = self.run_cli("inspect", self.input, "--json", block_models=True)

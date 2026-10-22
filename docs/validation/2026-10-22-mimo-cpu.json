@@ -1,0 +1,86 @@
+{
+  "checked_on": "2026-10-22",
+  "timezone": "Asia/Shanghai",
+  "scope": "Real fixed upstream weights; generated audio compatibility, not a quality benchmark",
+  "python": "3.12.14",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "source_revision": "e172761a0798bef8a549d440a276218529b53edb",
+  "archive_sha256": "f0eaaab7e899ffc548b29d51d76b89727253fb0a529b787b258eabfcf47db6fb",
+  "archive_bytes": 39354515,
+  "weight_sha256": "1d19305440e8439faeb4163d809b2dcaaffacf67f6f926425be581290d6536ee",
+  "weight_bytes": 42491051,
+  "download_command_exercised": true,
+  "local_archive_install_exercised": true,
+  "cuda_tested": false,
+  "quality_benchmark": false,
+  "results": [
+    {
+      "case": "stereo_tone_2s",
+      "passed": true,
+      "model_id": "mimo-scnet",
+      "toolkit_version": "0.3.0",
+      "model_sha256": "1d19305440e8439faeb4163d809b2dcaaffacf67f6f926425be581290d6536ee",
+      "source_revision": "e172761a0798bef8a549d440a276218529b53edb",
+      "sample_rate": 44100,
+      "source_sample_rate": 16000,
+      "channels": 2,
+      "frames": 88200,
+      "iterations": 2,
+      "device": "cpu",
+      "chunk_seconds": 0.5,
+      "overlap": 0.25,
+      "chunks": 5,
+      "seconds": 1.7683966999757104,
+      "timing_scope": "model_loading_inference_overlap_add; excludes audio I/O and weight verification",
+      "mixture_max_abs_error": 6.705522537231445e-08,
+      "stems": {
+        "vocals": "vocals.wav",
+        "bass": "bass.wav",
+        "drums": "drums.wav",
+        "other": "other.wav"
+      },
+      "accompaniment": "accompaniment.wav",
+      "runtime": {
+        "numpy": "2.5.4",
+        "scipy": "1.18.1",
+        "soundfile": "0.14.0",
+        "torch": "2.14.1+cpu"
+      },
+      "validation_scope": "Inference/reconstruction record; no reference quality score."
+    },
+    {
+      "case": "one_frame_mono",
+      "passed": true,
+      "model_id": "mimo-scnet",
+      "toolkit_version": "0.3.0",
+      "model_sha256": "1d19305440e8439faeb4163d809b2dcaaffacf67f6f926425be581290d6536ee",
+      "source_revision": "e172761a0798bef8a549d440a276218529b53edb",
+      "sample_rate": 44100,
+      "source_sample_rate": 8000,
+      "channels": 2,
+      "frames": 6,
+      "iterations": 2,
+      "device": "cpu",
+      "chunk_seconds": 0.5,
+      "overlap": 0.25,
+      "chunks": 1,
+      "seconds": 0.20388209997327067,
+      "timing_scope": "model_loading_inference_overlap_add; excludes audio I/O and weight verification",
+      "mixture_max_abs_error": 7.450580596923828e-09,
+      "stems": {
+        "vocals": "vocals.wav",
+        "bass": "bass.wav",
+        "drums": "drums.wav",
+        "other": "other.wav"
+      },
+      "accompaniment": "accompaniment.wav",
+      "runtime": {
+        "numpy": "2.5.4",
+        "scipy": "1.18.1",
+        "soundfile": "0.14.0",
+        "torch": "2.14.1+cpu"
+      },
+      "validation_scope": "Inference/reconstruction record; no reference quality score."
+    }
+  ]
+}

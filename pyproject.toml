@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "voice-extraction-toolkit"
-version = "0.2.0"
-description = "File-based audio preparation, vocal separation, and legacy voice classification"
+version = "0.3.0"
+description = "Local four-stem separation with Sony's 2026 MIMO-SCNet research model and a tested audio CLI"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 license = "MIT"
-license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "voice_extraction/_vendor/sony_scnet/LICENSE*"]
 authors = [{name = "Ian-Yin0209"}]
 dependencies = ["numpy>=1.26,<3", "scipy>=1.11,<2", "soundfile>=0.12,<1"]
 classifiers = [
@@ -19,6 +19,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+modern = ["torch>=2.5,<3"]
 models = ["torch>=2.2,<3", "tensorflow>=2.16,<3", "librosa>=0.10.2,<1", "h5py>=3.10,<4"]
 dev = ["build>=1.2,<2", "ruff>=0.11,<1"]
 
@@ -28,6 +29,12 @@ voice-extract = "voice_extraction.cli:main"
 [project.urls]
 Repository = "https://github.com/Ian-Yin0209/Human-Voice-Extraction-and-Gender-Classification"
 Issues = "https://github.com/Ian-Yin0209/Human-Voice-Extraction-and-Gender-Classification/issues"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.package-data]
+"voice_extraction._vendor.sony_scnet" = ["LICENSE", "LICENSE.SCNet", "SOURCE.md"]
 
 [tool.setuptools.packages.find]
 include = ["voice_extraction*", "spleeter_style*"]
@@ -39,3 +46,6 @@ extend-exclude = ["legacy"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+"voice_extraction/_vendor/sony_scnet/scnet.py" = ["E741"]

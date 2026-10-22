@@ -1,95 +1,125 @@
-# Voice Extraction Toolkit
+# Voice Extraction Toolkit · MIMO Stem Lab
 
-A local command-line toolkit for inspecting and preparing audio, with optional Spleeter-style vocal separation and a legacy voice-label classifier.
+[![CI](https://github.com/Ian-Yin0209/Human-Voice-Extraction-and-Gender-Classification/actions/workflows/ci.yml/badge.svg)](https://github.com/Ian-Yin0209/Human-Voice-Extraction-and-Gender-Classification/actions/workflows/ci.yml)
+![Version 0.3.0](https://img.shields.io/badge/version-0.3.0-176B56)
+![Python 3.10–3.12](https://img.shields.io/badge/python-3.10--3.12-3776AB)
+[![Code MIT](https://img.shields.io/badge/code-MIT-176B56)](LICENSE)
 
-The audio utilities work without model weights or a microphone. Model commands use explicitly supplied local weights and do not download models automatically. See [Provenance](docs/PROVENANCE.md) for the project's history and upstream components.
+**One song. Four stems. A local workflow you can inspect.**
 
-## Install
+Turn a music file into **vocals, bass, drums and other**, plus an accompaniment mix and a JSON processing report. Version 0.3.0 adds a local backend for **Sony Research's September 2026 MIMO-SCNet** model, alongside audio inspection, preparation and reference-based evaluation.
 
-Use Python 3.10–3.12:
+[Download source ZIP](https://github.com/Ian-Yin0209/Human-Voice-Extraction-and-Gender-Classification/archive/refs/heads/master.zip) · [Research & validation](docs/RESEARCH.md) · [Contributing](CONTRIBUTING.md)
 
-```sh
-python -m pip install .
-voice-extract --help
-```
+## Start in three commands
 
-These commands install the local checkout; this project is not published on PyPI. The base installation uses NumPy, SciPy and SoundFile. For optional model commands:
-
-```sh
-python -m pip install '.[models]'
-```
-
-This adds PyTorch, TensorFlow, librosa and h5py. Available package builds depend on your Python version, operating system and accelerator. You can also run `python -m voice_extraction`.
-
-## Inspect and prepare audio
-
-Use a mono or stereo audio file supported by SoundFile, such as WAV or FLAC:
+Download and unzip the source, then open a terminal in the folder containing `pyproject.toml`. Use Python 3.10–3.12 and put your input at `song.wav`.
 
 ```sh
-voice-extract inspect input.wav
-voice-extract inspect input.wav --json
-voice-extract prepare input.wav prepared.wav --start 2 --duration 10 --sample-rate 44100 --mono --normalize
+python -m pip install '.[modern]'
+voice-extract fetch-model mimo-scnet --models-dir models
+voice-extract separate song.wav stems --backend mimo --weights models/mimo-scnet-small-v1.pth
 ```
 
-`prepare` writes a floating-point WAV file. It resamples to 44.1 kHz by default; choose another rate with `--sample-rate`. Without crop options it uses the whole input. Channel mixing and peak normalization to 0.99 are opt-in. Existing outputs are rejected unless `--force` is supplied, and the input file cannot be used as the output.
+This installs the local checkout; the project is **not published on PyPI**. The modern backend uses PyTorch and the base audio libraries. It does not require TensorFlow, torchaudio or FFmpeg.
 
-For a reproducible demonstration without downloading audio, generate an original two-second stereo tone:
+The model download is a **39.4 MB ZIP**; its extracted weights are **42.5 MB**. PyTorch and other dependencies are additional downloads. These numbers are not the complete installation size.
+
+The `stems` directory must be new. MIMO separation refuses existing output directories and has no `--force` override.
+
+## What you get
+
+```text
+stems/
+├── vocals.wav
+├── bass.wav
+├── drums.wav
+├── other.wav
+├── accompaniment.wav
+└── report.json
+```
+
+Outputs are **44.1 kHz stereo floating-point WAV**. Mono input is duplicated to stereo. The accompaniment is the sum of bass, drums and other; `report.json` records the model identity, processing settings and mixture-reconstruction error. Add `--json` for a machine-readable console result too.
+
+CPU is the default. `--device cuda` is available with a compatible CUDA-enabled PyTorch installation; CUDA has not been validated in this release.
+
+| MIMO option | Default | Accepted values |
+| --- | --- | --- |
+| `--chunk-seconds` | `6` | `0.1` to `30` seconds |
+| `--overlap` | `0.25` | Fraction `0` to `0.75` |
+| `--iterations` | `2` | `1` or `2` refinement steps |
+
+Chunking limits model activation sizes. It does **not** make the whole workflow stream from disk: the input and accumulated output arrays still reside in RAM.
+
+## Explicit downloads, offline inference
+
+Inspect the pinned catalog without networking or importing an ML runtime:
 
 ```sh
-python examples/generate_demo.py demo.wav
-voice-extract inspect demo.wav --json
-voice-extract prepare demo.wav prepared.wav --start 0.25 --duration 1 --sample-rate 22050
+voice-extract models --json
 ```
 
-This signal checks file processing, not speech recognition or separation quality.
-
-## Optional: separate vocals
-
-Obtain the original **2-stem** checkpoint from [Deezer's Spleeter v1.4.0 release](https://github.com/deezer/spleeter/releases/tag/v1.4.0), then extract `2stems.tar.gz` into a local model directory. Point `--checkpoint` at the shared checkpoint **prefix**, not at the `.index` or `.data-*` file:
+`fetch-model` verifies both the official ZIP and extracted weights against pinned sizes and SHA-256 hashes. To install from an already downloaded [official ZIP](https://github.com/SonyResearch/mimo-audio-separation/releases/download/v1.0.0/mimo-scnet_small.zip), use:
 
 ```sh
-voice-extract separate input.wav stems --checkpoint models/2stems/model --device cpu
+voice-extract fetch-model mimo-scnet --models-dir models --archive mimo-scnet_small.zip
 ```
 
-The command resamples to 44.1 kHz, duplicates mono input to stereo when needed, and writes `vocals.wav` and `accompaniment.wav`. Use `--device cuda` with a working CUDA-enabled PyTorch installation. Existing outputs require `--force` to replace.
+That archive-based installation is offline. **`separate` never downloads models or makes a network request.** Weights are obtained separately and are not bundled with this repository.
 
-The separator is based on an older PyTorch port of Spleeter. Pretrained-weight loading and inference have passed a Windows CPU smoke check on generated audio; this does not establish separation quality. See [validation](docs/VALIDATION.md) and the [roadmap](docs/ROADMAP.md).
+## Inspect, prepare and compare
 
-## Optional: run the legacy classifier
-
-The original weights are available from upstream [gender-recognition-by-voice](https://github.com/x4nth055/gender-recognition-by-voice/blob/master/results/model.h5). Obtain them separately and supply a local file:
+These commands need only the base installation (`python -m pip install .`), with no ML runtime:
 
 ```sh
-voice-extract classify input.wav --weights models/model.h5 --start 0 --duration 5 --json
+voice-extract inspect song.wav --json
+voice-extract prepare song.wav clip.wav --start 10 --duration 15 --sample-rate 44100 --mono
+voice-extract evaluate reference-vocals.wav stems/vocals.wav --json
 ```
 
-This reproduces an upstream model's binary `male` / `female` dataset labels. They are not a determination of a person's gender or identity. The model uses average Mel-spectrum features and a fully connected neural network. It is retained for research compatibility; this repository does not claim to have trained the model or independently measured its accuracy. See the [model card](docs/MODEL_CARD.md).
+`prepare` writes a floating-point WAV and resamples to 44.1 kHz by default. Use `--normalize` to normalize a non-silent peak to 0.99. Existing files require its explicit `--force` option; input and output must be different files.
+
+`evaluate` compares a supplied reference with an estimate using zero-mean, per-channel **SI-SDR**. Sample rates, frame counts and channel counts must already match: it does not align, crop or resample them. Undefined or unbounded cases produce JSON `null` with a reason; if any channel is undefined, the overall score is also `null`. **SI-SDR is not the museval SDR used in the upstream MUSDB18-HQ results.**
+
+## What has actually run
+
+The published [Windows CPU validation record](docs/validation/2026-10-22-mimo-cpu.json) contains two real-weight checks: a two-second, 16 kHz **stereo** tone became 88,200 stereo frames at 44.1 kHz through five short chunks; a one-frame, 8 kHz **mono** input became six stereo frames.
+
+For the two-second case, model loading, inference and overlap-add took **1.7684 seconds**, excluding audio I/O and weight verification. Maximum stem-sum reconstruction error was **6.71 × 10⁻⁸**.
+
+This is a generated-signal execution check, not a music-quality benchmark or a speed promise. It does not establish current state-of-the-art separation quality. See [Research & validation](docs/RESEARCH.md) for settings, upstream comparisons and remaining limits.
+
+## Research and licensing
+
+The implementation builds on [Sony's MIMO research](https://arxiv.org/abs/2609.07226), with a small inference adapter and preserved third-party notices. [Code is MIT licensed](LICENSE); see [third-party notices](THIRD_PARTY_NOTICES.md). **That code license does not establish the model-weight license.** No separate explicit weight license was found in the inspected upstream repository, release or checkpoint archive; review the upstream terms before redistribution or commercial use.
+
+## Legacy adapters
+
+<details>
+<summary>Spleeter and the historical voice-label classifier</summary>
+
+The earlier adapters remain available with `python -m pip install '.[models]'` and separately obtained weights:
+
+```sh
+voice-extract separate song.wav legacy-stems --backend spleeter --checkpoint models/2stems/model
+voice-extract classify song.wav --weights models/model.h5 --json
+```
+
+Sources: [Deezer Spleeter](https://github.com/deezer/spleeter), [Tuan Nguyen's PyTorch port](https://github.com/tuan3w/spleeter-pytorch), and [x4nth055's classifier](https://github.com/x4nth055/gender-recognition-by-voice). The classifier reproduces upstream binary dataset labels, not a person's gender or identity. Historical origins and notices are retained in [Provenance](docs/PROVENANCE.md) and the [model card](docs/MODEL_CARD.md).
+
+</details>
 
 ## Development
 
 ```sh
-python -m pip install -e .
+python -m pip install -e '.[dev]'
 python -m unittest discover -s tests -v
 ```
 
-Optional model smoke check, using separately obtained local weights:
+Both `voice-extract` and `python -m voice_extraction` are supported. [Contributing](CONTRIBUTING.md) · [Roadmap](docs/ROADMAP.md) · [Research](docs/RESEARCH.md)
 
-```sh
-python examples/model_smoke.py --checkpoint models/2stems/model --weights models/model.h5 --output-dir smoke-results
-```
+## 中文简述
 
-Use a new output directory. The script generates its own stereo tone, checks both model adapters, and records dependency versions and weight SHA-256 checksums. It does not measure model accuracy or source-separation quality.
+一首歌，本地拆成四条音轨：人声、贝斯、鼓与其他乐器，另外输出伴奏和 JSON 报告。0.3.0 接入 Sony 2026 年 MIMO-SCNet 研究模型，CPU 默认可用；模型下载显式执行并校验哈希，分离过程不联网。现代路径不需要 TensorFlow、torchaudio 或 FFmpeg，基础音频工具也不依赖机器学习运行时。
 
-Supported entry points are `voice-extract` and `python -m voice_extraction`. The historical training and recording scripts are not included in the maintained tree; `legacy/README.md` links to their original history and upstream sources.
-
-- [Contributing](CONTRIBUTING.md)
-- [Third-party notices](THIRD_PARTY_NOTICES.md)
-- [Provenance](docs/PROVENANCE.md)
-- [Model card](docs/MODEL_CARD.md)
-- [Roadmap](docs/ROADMAP.md)
-
-## 中文概览
-
-这是一个本地音频处理命令行工具：基础安装可查看音频信息、裁剪、重采样、转单声道及归一化；安装可选模型依赖后，可使用自己提供的本地权重进行人声分离和历史分类模型实验。工具不会自动下载权重，也不默认调用麦克风。已有输出默认不会被覆盖。
-
-历史来源与第三方署名见独立文档。分类结果只表示上游训练集的二元标签，不能用来确定个人身份或性别。预训练模型的实际效果仍需独立验证。
+39.4 MB 只是模型 ZIP，另需安装 PyTorch。当前实测证明真实权重能在 Windows CPU 上完成短音频处理，尚不能证明音乐分离质量、GPU 性能或全局领先。模型权重许可与代码 MIT 许可分别说明。
