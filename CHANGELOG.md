@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Report interrupted HTTP model downloads with a clear retry/offline-install message instead of a CLI traceback; discard partial downloads without publishing weights.
+
 ## 0.3.0 · 2026 MIMO Stem Lab (2026-10-22)
 
 - Integrate Sony's September 2026 MIMO-SCNet small checkpoint for local vocals, bass, drums and other stems, plus an instrumental sum.
