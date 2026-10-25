@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from http.client import HTTPException
 import os
 from pathlib import Path
 import tempfile
@@ -112,6 +113,11 @@ def fetch_model(models_dir: str | Path, *, archive: str | Path | None = None) ->
             verify_weights(candidate)
             # Same filesystem: create-if-absent, including in a concurrent fetch.
             os.link(candidate, destination)
+    except HTTPException as exc:
+        raise ValueError(
+            "Model download was interrupted. Retry fetch-model or install the official ZIP "
+            "with --archive."
+        ) from exc
     except (zipfile.BadZipFile, KeyError) as exc:
         raise ValueError("The model archive is incomplete or has an unexpected layout.") from exc
     return {"model_id": MODEL_ID, "weights": str(destination), "downloaded": archive is None,

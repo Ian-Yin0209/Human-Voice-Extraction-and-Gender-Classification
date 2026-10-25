@@ -1,6 +1,8 @@
 """Real archive/hash boundaries with small fixtures and a mocked HTTP transport."""
 
+from contextlib import redirect_stderr, redirect_stdout
 import hashlib
+from http.client import HTTPResponse, IncompleteRead
 import io
 import json
 from pathlib import Path
@@ -12,7 +14,7 @@ from unittest.mock import patch
 from urllib.error import URLError
 import zipfile
 
-from voice_extraction import model_registry as registry
+from voice_extraction import cli, model_registry as registry
 
 
 class ModelRegistryTests(unittest.TestCase):
@@ -47,6 +49,21 @@ class ModelRegistryTests(unittest.TestCase):
             for name, payload in entries.items():
                 bundle.writestr(name, payload)
         return stream.getvalue()
+
+    @staticmethod
+    def truncated_chunked_response():
+        class SocketFixture:
+            def makefile(self, *args):
+                return io.BytesIO(
+                    b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n"
+                    b"8\r\nabcdefgh\r\n8\r\nabc"
+                )
+
+        # Use the real HTTP parser: the second chunk ends before its declared
+        # length, so response.read() raises IncompleteRead rather than OSError.
+        response = HTTPResponse(SocketFixture())
+        response.begin()
+        return response
 
     def pin_archive(self, data):
         """Authenticate this fixture ZIP; keep expected weight bytes unchanged."""
@@ -230,6 +247,36 @@ with patch('urllib.request.urlopen', side_effect=AssertionError('Catalog used th
             with self.assertRaises(URLError):
                 registry.fetch_model(self.models)
         self.assert_no_published_or_staged_files()
+
+    def test_truncated_chunked_download_suggests_local_archive_and_cleans_stage(self):
+        response = self.truncated_chunked_response()
+        with patch.object(registry, "urlopen", return_value=response):
+            with self.assertRaisesRegex(ValueError, "--archive") as caught:
+                registry.fetch_model(self.models)
+        self.assertIsInstance(caught.exception.__cause__, IncompleteRead)
+        self.assertTrue(response.isclosed())
+        self.assert_no_published_or_staged_files()
+
+    def test_truncated_chunked_download_cli_has_readable_error_and_no_partial_json(self):
+        for output_options in ([], ["--json"]):
+            with self.subTest(output_options=output_options):
+                response = self.truncated_chunked_response()
+                stdout, stderr = io.StringIO(), io.StringIO()
+                with patch.object(registry, "urlopen", return_value=response), \
+                        redirect_stdout(stdout), redirect_stderr(stderr):
+                    result = cli.main([
+                        "fetch-model", "mimo-scnet", "--models-dir", str(self.models),
+                        *output_options,
+                    ])
+                self.assertEqual(result, 2)
+                self.assertEqual(stdout.getvalue(), "")
+                diagnostic = stderr.getvalue()
+                self.assertTrue(diagnostic.startswith("error:"), diagnostic)
+                self.assertIn("interrupted", diagnostic.lower())
+                self.assertIn("--archive", diagnostic)
+                self.assertNotIn("traceback", diagnostic.lower())
+                self.assertTrue(response.isclosed())
+                self.assert_no_published_or_staged_files()
 
 
 if __name__ == "__main__":
